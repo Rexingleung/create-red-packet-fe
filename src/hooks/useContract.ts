@@ -1,4 +1,4 @@
-import { useContractStore, useLogStore } from '@/store'
+import { useContractStore, useLogStore, useWalletStore } from '@/store'
 import { formatEther } from '@/utils'
 
 export const useContract = () => {
@@ -23,6 +23,7 @@ export const useContract = () => {
     reset
   } = useContractStore()
 
+  const { userAddress } = useWalletStore()
   const { addContractLog, addFunctionLog, addEventLog } = useLogStore()
 
   const handleVerifyContract = async () => {
@@ -84,6 +85,14 @@ export const useContract = () => {
   }
 
   const handleClaimRedPacket = async (packetId: number) => {
+    // 检查是否是自己创建的红包
+    const packetInfo = await getPacketInfo(packetId)
+    if (packetInfo && userAddress && packetInfo.sender.toLowerCase() === userAddress.toLowerCase()) {
+      addFunctionLog('❌ 不能领取自己创建的红包', 'error')
+      addFunctionLog('💡 提示: 请使用不同的账户地址来领取红包', 'warning')
+      return
+    }
+
     addFunctionLog(`尝试抢红包 ID: ${packetId}`, 'info')
     
     const success = await claimRedPacket(packetId)
@@ -96,12 +105,33 @@ export const useContract = () => {
   }
 
   const handleRefundRedPacket = async (packetId: number) => {
+    // 检查红包信息
+    const packetInfo = await getPacketInfo(packetId)
+    if (!packetInfo) {
+      addFunctionLog(`❌ 无法获取红包 ${packetId} 的信息`, 'error')
+      return
+    }
+
+    // 检查是否是红包创建者
+    if (!userAddress || packetInfo.sender.toLowerCase() !== userAddress.toLowerCase()) {
+      addFunctionLog('❌ 只有红包创建者才能退款', 'error')
+      return
+    }
+
+    // 检查红包是否还有剩余金额
+    if (packetInfo.remainingAmount.isZero()) {
+      addFunctionLog('❌ 该红包已无剩余金额可退款', 'warning')
+      return
+    }
+
     addFunctionLog(`尝试退款红包 ID: ${packetId}`, 'info')
+    addFunctionLog(`剩余金额: ${formatEther(packetInfo.remainingAmount)} ETH`, 'info')
+    addFunctionLog(`剩余数量: ${packetInfo.remainingCount} 个`, 'info')
     
     const success = await refundRedPacket(packetId)
     
     if (success) {
-      addFunctionLog('✅ 红包退款成功!', 'success')
+      addFunctionLog('✅ 红包退款成功! 剩余资金已返还', 'success')
     } else {
       addFunctionLog(`退款失败: ${error}`, 'error')
     }
@@ -131,6 +161,31 @@ export const useContract = () => {
     }
   }
 
+  // 检查指定红包是否可以退款
+  const canRefund = async (packetId: number): Promise<boolean> => {
+    if (!userAddress) return false
+    
+    const packetInfo = await getPacketInfo(packetId)
+    if (!packetInfo) return false
+    
+    return packetInfo.sender.toLowerCase() === userAddress.toLowerCase() && 
+           !packetInfo.remainingAmount.isZero()
+  }
+
+  // 获取用户创建的红包列表
+  const getUserRedPackets = async (): Promise<Array<{id: number, info: any}>> => {
+    if (!userAddress) return []
+    
+    const packets = []
+    for (let i = 0; i < currentPacketId; i++) {
+      const info = await getPacketInfo(i)
+      if (info && info.sender.toLowerCase() === userAddress.toLowerCase()) {
+        packets.push({ id: i, info })
+      }
+    }
+    return packets
+  }
+
   return {
     address,
     contract,
@@ -148,6 +203,8 @@ export const useContract = () => {
     handleRefundRedPacket,
     handleQueryEvents,
     getPacketInfo,
-    hasClaimed
+    hasClaimed,
+    canRefund,
+    getUserRedPackets
   }
 }
