@@ -2,7 +2,8 @@ import React from 'react'
 import { 
   NetworkStatus,
   ContractVerification, 
-  FunctionTesting, 
+  FunctionTesting,
+  RedPacketManager,
   EventQuery 
 } from '@/components'
 
@@ -30,6 +31,9 @@ const App: React.FC = () => {
           
           {/* Function Testing */}
           <FunctionTesting />
+
+          {/* Red Packet Manager */}
+          <RedPacketManager />
           
           {/* Event Query */}
           <EventQuery />
@@ -39,6 +43,9 @@ const App: React.FC = () => {
         <div className="mt-12 text-center text-blue-100">
           <p className="text-sm">
             基于 React + TypeScript + TailwindCSS + Zustand 构建
+          </p>
+          <p className="text-xs mt-2 opacity-80">
+            支持退款功能，防止红包资金锁定 | 智能检测自转账防护
           </p>
         </div>
       </div>
