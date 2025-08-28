@@ -12,7 +12,8 @@ export const FunctionTesting: React.FC = () => {
     isLoading,
     handleTestReadFunctions,
     handleCreateRedPacket,
-    handleClaimRedPacket
+    handleClaimRedPacket,
+    handleRefundRedPacket
   } = useContract()
   
   const { isConnected } = useWallet()
@@ -51,11 +52,22 @@ export const FunctionTesting: React.FC = () => {
     handleClaimRedPacket(id)
   }
 
+  const handleRefundClick = () => {
+    const id = parseInt(packetId)
+    
+    if (isNaN(id) || id < 0) {
+      alert('请输入有效的红包ID')
+      return
+    }
+    
+    handleRefundRedPacket(id)
+  }
+
   return (
     <Card title="合约功能测试" icon="🔧">
       <div className="space-y-6">
         {/* 功能按钮区域 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Button
             variant="success"
             onClick={handleTestReadFunctions}
@@ -64,7 +76,9 @@ export const FunctionTesting: React.FC = () => {
             测试读取功能
           </Button>
           
-          <WalletButton />
+          <div className="md:col-span-2 lg:col-span-1">
+            <WalletButton />
+          </div>
           
           <Button
             onClick={handleCreateClick}
@@ -80,6 +94,15 @@ export const FunctionTesting: React.FC = () => {
             loading={isLoading}
           >
             抢红包
+          </Button>
+
+          <Button
+            variant="warning"
+            onClick={handleRefundClick}
+            disabled={!isConnected || !isVerified || isLoading}
+            loading={isLoading}
+          >
+            退款红包
           </Button>
         </div>
 
@@ -106,13 +129,31 @@ export const FunctionTesting: React.FC = () => {
           />
           
           <Input
-            label="红包ID (用于抢红包)"
+            label="红包ID"
             type="number"
             min="0"
             value={packetId}
             onChange={(e) => setPacketId(e.target.value)}
             helperText={`当前最新ID: ${currentPacketId > 0 ? currentPacketId - 1 : 0}`}
           />
+        </div>
+
+        {/* 操作说明 */}
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <span className="text-blue-400 text-lg">💡</span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700 font-medium">使用提示:</p>
+              <ul className="mt-2 text-sm text-blue-600 list-disc list-inside space-y-1">
+                <li><strong>创建红包</strong>: 设置红包数量和总金额后点击创建</li>
+                <li><strong>抢红包</strong>: 输入红包ID，注意不能抢自己创建的红包</li>
+                <li><strong>退款红包</strong>: 只能退款自己创建且有剩余金额的红包</li>
+                <li><strong>多账户测试</strong>: 建议使用不同账户来完整测试功能</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         {/* 日志显示区域 */}
