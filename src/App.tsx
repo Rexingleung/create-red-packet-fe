@@ -9,11 +9,11 @@ import {
 
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-blue-500 to-blue-600 p-5">
-      <div className="max-w-4xl mx-auto">
+    <div className="p-5 min-h-screen bg-gradient-to-br from-purple-400 via-blue-500 to-blue-600">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <div className="mb-8 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl">
             🧧 红包合约验证工具
           </h1>
           <p className="text-lg text-blue-100">
@@ -44,7 +44,7 @@ const App: React.FC = () => {
           <p className="text-sm">
             基于 React + TypeScript + TailwindCSS + Zustand 构建
           </p>
-          <p className="text-xs mt-2 opacity-80">
+          <p className="mt-2 text-xs opacity-80">
             支持退款功能，防止红包资金锁定 | 智能检测自转账防护
           </p>
         </div>

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { ethers } from 'ethers'
 import { ContractState, RedPacketInfo, EventLog } from '@/types'
-import { CONTRACT_ABI, GAS_LIMITS } from '@/constants'
+import { CONTRACT_ABI, GAS_LIMITS, SEPOLIA_NETWORK } from '@/constants'
 import { useWalletStore } from './walletStore'
 
 interface ContractActions {
@@ -53,6 +53,13 @@ export const useContractStore = create<ContractStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
+      // 校验网络
+      const network = await provider.getNetwork()
+      if (network.chainId !== SEPOLIA_NETWORK.chainId) {
+        set({ error: '请切换到 Sepolia 测试网', isLoading: false })
+        return false
+      }
+
       // 检查合约代码
       const code = await provider.getCode(address)
       if (code === '0x') {

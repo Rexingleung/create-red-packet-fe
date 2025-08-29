@@ -1,14 +1,6 @@
-export const CONTRACT_ABI = [
-  "function createRedPacket(uint256 _count) external payable",
-  "function claimRedPacket(uint256 _packetId) external",
-  "function refundRedPacket(uint256 _packetId) external",
-  "function getPacketInfo(uint256 _packetId) external view returns (address, uint256, uint256, uint256, uint256, bool)",
-  "function hasClaimed(uint256 _packetId, address _user) external view returns (bool)",
-  "function getCurrentPacketId() external view returns (uint256)",
-  "event PacketCreated(uint256 indexed packetId, address indexed sender, uint256 totalAmount, uint256 totalCount)",
-  "event PacketClaimed(uint256 indexed packetId, address indexed claimer, uint256 amount)",
-  "event PacketRefunded(uint256 indexed packetId, address indexed sender, uint256 refundAmount)"
-]
+import abi from './abi.json'
+
+export const CONTRACT_ABI = abi
 
 export const SEPOLIA_NETWORK = {
   chainId: 11155111,

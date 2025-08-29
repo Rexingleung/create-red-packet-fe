@@ -50,7 +50,7 @@ export const ContractVerification: React.FC = () => {
           placeholder="0x..."
           value={address}
           onChange={handleAddressChange}
-          error={inputError || error}
+          error={inputError || (error ?? undefined)}
         />
         
         <Button 

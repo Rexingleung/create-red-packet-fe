@@ -185,3 +185,107 @@ MIT License
 - 💰 支持创建和抢红包
 - 📊 支持事件查询
 - 🔗 MetaMask 钱包集成
+
+## 合约验证流程
+
+### 前置条件
+- 已连接钱包（建议使用 MetaMask），并切换到 `Sepolia` 测试网
+- 已部署并拿到红包合约地址
+
+### 验证步骤（前端交互）
+1. 在页面左侧/顶部导航进入“合约基本信息”模块（`ContractVerification`）
+2. 输入合约地址（形如 `0x...`），点击“验证合约”
+3. 系统将依次进行以下校验与只读调用：
+   - 校验当前网络链 ID 是否为 `Sepolia`（`chainId=11155111`）
+   - `provider.getCode(address)`：确认地址存在合约字节码
+   - `new ethers.Contract(address, CONTRACT_ABI, provider)`：实例化合约对象
+   - `contract.getCurrentPacketId()`：调用只读方法验证 ABI 与基础读取能力
+4. 验证成功后，页面会：
+   - 展示“当前红包ID”等信息
+   - 在日志区域输出多条成功日志
+   - 将合约实例与状态写入全局 Store（解锁创建/领取/退款/事件查询等功能）
+
+### 是否消耗 Gas？
+- 不消耗。上述步骤均为只读调用（`eth_call`），不会打包上链，不产生交易与 Gas 费用。
+- 只有会修改链上状态的操作（如 `createRedPacket`、`claimRedPacket`、`refundRedPacket`）才会消耗 Gas。
+
+### 常见失败原因与提示
+- 网络不匹配：未切到 `Sepolia` 测试网 → 请切换网络
+- 地址无代码：`provider.getCode(address)` 返回 `0x` → 地址不存在合约或未部署
+- ABI 不匹配：`getCurrentPacketId()` 读取失败 → 检查导入的 ABI 是否与链上合约版本一致
+- 钱包/Provider 未就绪：请先初始化 Provider 并连接钱包
+
+### 验证流程图（SVG）
+
+<div align="center">
+<svg width="860" height="360" viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .box { fill:#ffffff; stroke:#4b5563; stroke-width:2; rx:8; ry:8; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; font-size:14px; fill:#111827; font-weight:600; }
+      .text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; font-size:12px; fill:#374151; }
+      .arrow { stroke:#6b7280; stroke-width:2; marker-end:url(#arrowHead); }
+      .note { font-size:12px; fill:#10b981; font-weight:600; }
+      .warn { font-size:12px; fill:#ef4444; font-weight:600; }
+    </style>
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b7280" />
+    </marker>
+  </defs>
+
+  <!-- Step 1: 输入地址 & 点击验证 -->
+  <rect class="box" x="20" y="30" width="220" height="70" />
+  <text class="title" x="30" y="55">1) 输入地址并点击验证</text>
+  <text class="text" x="30" y="78">组件: ContractVerification</text>
+  <text class="text" x="30" y="96">校验地址格式 (0x...)</text>
+
+  <!-- Arrow 1 -->
+  <line class="arrow" x1="240" y1="65" x2="300" y2="65" />
+
+  <!-- Step 2: 校验网络 -->
+  <rect class="box" x="300" y="30" width="220" height="70" />
+  <text class="title" x="310" y="55">2) 校验网络 (Sepolia)</text>
+  <text class="text" x="310" y="78">provider.getNetwork()</text>
+  <text class="text" x="310" y="96">chainId === 11155111</text>
+
+  <!-- Arrow 2 -->
+  <line class="arrow" x1="520" y1="65" x2="580" y2="65" />
+
+  <!-- Step 3: 地址有无代码 -->
+  <rect class="box" x="580" y="30" width="260" height="70" />
+  <text class="title" x="590" y="55">3) 读取地址字节码</text>
+  <text class="text" x="590" y="78">provider.getCode(address)</text>
+  <text class="text" x="590" y="96">返回 '0x' 代表无合约</text>
+
+  <!-- Arrow 3 down -->
+  <line class="arrow" x1="710" y1="100" x2="710" y2="140" />
+
+  <!-- Step 4: 实例化合约 -->
+  <rect class="box" x="580" y="140" width="260" height="70" />
+  <text class="title" x="590" y="165">4) 实例化合约对象</text>
+  <text class="text" x="590" y="188">new ethers.Contract(address, ABI, provider)</text>
+
+  <!-- Arrow 4 down -->
+  <line class="arrow" x1="710" y1="210" x2="710" y2="250" />
+
+  <!-- Step 5: 调用只读方法 -->
+  <rect class="box" x="580" y="250" width="260" height="70" />
+  <text class="title" x="590" y="275">5) 只读调用 (不消耗Gas)</text>
+  <text class="text" x="590" y="298">contract.getCurrentPacketId()</text>
+  <text class="text" x="590" y="316">验证 ABI 与读取能力</text>
+
+  <!-- Summary box -->
+  <rect class="box" x="20" y="220" width="520" height="100" />
+  <text class="title" x="30" y="245">结果 & 状态更新</text>
+  <text class="text" x="30" y="268">- 写入全局 Store: contract, currentPacketId, isVerified</text>
+  <text class="text" x="30" y="288">- 输出日志: 成功/错误信息</text>
+  <text class="note" x="30" y="308">提示: 只读流程，使用 eth_call，不消耗 Gas</text>
+
+  <!-- Error branch from Step 2 (网络错误) -->
+  <line class="arrow" x1="410" y1="100" x2="410" y2="130" />
+  <text class="warn" x="280" y="130">若网络非 Sepolia → 显示错误并中止</text>
+
+  <!-- Error note for Step 3 (无代码) -->
+  <text class="warn" x="580" y="120">若返回 '0x' → 地址无合约/未部署</text>
+</svg>
+</div>
