@@ -216,4 +216,4 @@ MIT License
 - 钱包/Provider 未就绪：请先初始化 Provider 并连接钱包
 
 ### 验证流程图（SVG）
-![验证流程图](vrify.svg)
+![验证流程图](./vrify.svg)
